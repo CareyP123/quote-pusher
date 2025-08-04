@@ -187,13 +187,10 @@ def show_job_info(job_number):
         job_info_label.config(text="❌ Job not found.")
     else:
         info_text = (
-            "Job No: {job_info['jobNo']}
-"
-            "Description: {job_info['description']}
-"
-            "Customer: {job_info['customer']}
-"
-            "Quote Accepted: {'✅ Yes' if job_info['quoteAccepted'] else '❌ No'}"
+            f"Job No: {job_info['jobNo']}\n"
+            f"Description: {job_info['description']}\n"
+            f"Customer: {job_info['customer']}\n"
+            f"Quote Accepted: {'✅ Yes' if job_info['quoteAccepted'] else '❌ No'}"
         )
         job_info_label.config(text=info_text)
 
