@@ -43,11 +43,18 @@ def get_job_details(job_number):
     headers = {
         "Authorization": f"Bearer {FERGUS_API_KEY}"
     }
-    response = requests.get(f"{FERGUS_API_BASE}/jobs", headers=headers)
     try:
+        response = requests.get(f"{FERGUS_API_BASE}/jobs", headers=headers)
+        response.raise_for_status()
         data = response.json().get("data", [])
-    except Exception as e:
-        messagebox.showerror("Error", f"Failed to fetch jobs: {e}")
+    except requests.RequestException as e:
+        messagebox.showerror(
+            "Error",
+            f"Failed to fetch jobs due to an HTTP error or connectivity issue: {e}",
+        )
+        return None
+    except ValueError as e:
+        messagebox.showerror("Error", f"Failed to parse job data: {e}")
         return None
 
     for job in data:
@@ -164,12 +171,23 @@ def push_quote(xml_path, job_number):
     }
 
     url = f"{FERGUS_API_BASE}/jobs/{job_info['id']}/quotes"
-    response = requests.post(url, headers=headers, json=payload)
+    try:
+        response = requests.post(url, headers=headers, json=payload)
+        response.raise_for_status()
+    except requests.RequestException as e:
+        messagebox.showerror(
+            "Error",
+            f"Failed to push quote due to an HTTP error or connectivity issue: {e}",
+        )
+        return
 
     if response.status_code in (200, 201):
         messagebox.showinfo("Success", "✅ Quote pushed to Fergus successfully!")
     else:
-        messagebox.showerror("Error", f"❌ Failed to push quote Status: {response.status_code} {response.text}")
+        messagebox.showerror(
+            "Error",
+            f"❌ Failed to push quote: Status {response.status_code} {response.text}",
+        )
 
 def select_file_and_start():
     file_path = filedialog.askopenfilename(filetypes=[("XML files", "*.xml")])
@@ -187,13 +205,10 @@ def show_job_info(job_number):
         job_info_label.config(text="❌ Job not found.")
     else:
         info_text = (
-            "Job No: {job_info['jobNo']}
-"
-            "Description: {job_info['description']}
-"
-            "Customer: {job_info['customer']}
-"
-            "Quote Accepted: {'✅ Yes' if job_info['quoteAccepted'] else '❌ No'}"
+            f"Job No: {job_info['jobNo']}\n"
+            f"Description: {job_info['description']}\n"
+            f"Customer: {job_info['customer']}\n"
+            f"Quote Accepted: {'✅ Yes' if job_info['quoteAccepted'] else '❌ No'}"
         )
         job_info_label.config(text=info_text)
 
