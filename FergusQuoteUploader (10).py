@@ -270,7 +270,11 @@ def push_quote(job_id, title, items, quote_id=None, job_no_for_web=None, parent=
         ttk.Label(popup, text="✅ Quote submitted successfully.\nOpening Fergus…").pack(padx=20, pady=20)
         # Center and raise popup (non-blocking)
         popup.update_idletasks()
-        w, h = popup.winfo_reqwidth(), popup.winfo_reqheight()
+        w, h = popup.winfo_width(), popup.winfo_height()
+        if w <= 1:
+            w = popup.winfo_reqwidth()
+        if h <= 1:
+            h = popup.winfo_reqheight()
         if parent:
             parent.update_idletasks()
             px, py = parent.winfo_rootx(), parent.winfo_rooty()
@@ -287,7 +291,7 @@ def push_quote(job_id, title, items, quote_id=None, job_no_for_web=None, parent=
             sw, sh = popup.winfo_screenwidth(), popup.winfo_screenheight()
             x, y = (sw - w)//2, (sh - h)//3
 
-        popup.geometry(f"+{x}+{y}")
+        popup.geometry(f"{int(w)}x{int(h)}+{int(x)}+{int(y)}")
 
         try:
             popup.attributes("-topmost", True)
