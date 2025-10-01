@@ -278,16 +278,18 @@ def push_quote(job_id, title, items, quote_id=None, job_no_for_web=None, parent=
                 pw, ph = parent.winfo_width(), parent.winfo_height()
                 if pw <= 1 or ph <= 1:
                     pw, ph = parent.winfo_reqwidth(), parent.winfo_reqheight()
-                x = px + max(0, (pw - w)//2)
-                y = py + max(0, (ph - h)//2)
+                x = px + (pw - w)//2
+                y = py + (ph - h)//2
                 popup.transient(parent)
             else:
                 sw, sh = popup.winfo_screenwidth(), popup.winfo_screenheight()
                 x, y = (sw - w)//2, (sh - h)//3
-            popup.geometry(f"+{x}+{y}")
+            x_prefix = "+" if x >= 0 else ""
+            y_prefix = "+" if y >= 0 else ""
+            popup.geometry(f"{x_prefix}{x}{y_prefix}{y}")
             popup.attributes("-topmost", True)
-        except Exception:
-            pass
+        except Exception as centering_error:
+            print(f"⚠️ Failed to center success popup: {centering_error}")
 
         # Best-effort: open the job's Quotes page (works for most tenants)
         try:
