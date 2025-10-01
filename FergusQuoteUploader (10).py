@@ -239,7 +239,7 @@ def export_preview_csv(items, path):
                              f"{cost:.2f}", f"{price:.2f}", f"{line_total:.2f}"])
 
 
-def push_quote(job_id, title, items, quote_id=None, job_no_for_web=None):
+def push_quote(job_id, title, items, quote_id=None, job_no_for_web=None, parent=None):
     """
     Submit the quote to Fergus.
     - No persistent debug files are written.
@@ -265,15 +265,25 @@ def push_quote(job_id, title, items, quote_id=None, job_no_for_web=None):
         except Exception:
             pass
 
-        popup = tk.Toplevel()
+        popup = tk.Toplevel(parent) if parent else tk.Toplevel()
         popup.title("Success")
         ttk.Label(popup, text="✅ Quote submitted successfully.\nOpening Fergus…").pack(padx=20, pady=20)
         # Center and raise popup (non-blocking)
         try:
             popup.update_idletasks()
             w, h = popup.winfo_reqwidth(), popup.winfo_reqheight()
-            sw, sh = popup.winfo_screenwidth(), popup.winfo_screenheight()
-            x, y = (sw - w)//2, (sh - h)//3
+            if parent:
+                parent.update_idletasks()
+                px, py = parent.winfo_rootx(), parent.winfo_rooty()
+                pw, ph = parent.winfo_width(), parent.winfo_height()
+                if pw <= 1 or ph <= 1:
+                    pw, ph = parent.winfo_reqwidth(), parent.winfo_reqheight()
+                x = px + max(0, (pw - w)//2)
+                y = py + max(0, (ph - h)//2)
+                popup.transient(parent)
+            else:
+                sw, sh = popup.winfo_screenwidth(), popup.winfo_screenheight()
+                x, y = (sw - w)//2, (sh - h)//3
             popup.geometry(f"+{x}+{y}")
             popup.attributes("-topmost", True)
         except Exception:
@@ -805,7 +815,13 @@ class FergusPreviewPage(ttk.Frame):
         if not self._preflight(): return
         job=self.controller.job_info
         if not job: return
-        push_quote(job["id"], job.get("description") or "", self.controller.filtered_items, job_no_for_web=job.get("jobNo"))
+        push_quote(
+            job["id"],
+            job.get("description") or "",
+            self.controller.filtered_items,
+            job_no_for_web=job.get("jobNo"),
+            parent=self.controller,
+        )
 
     def _on_update(self):
         if not self._preflight(): return
@@ -818,7 +834,14 @@ class FergusPreviewPage(ttk.Frame):
         quote_id=self.quote_id_lookup.get(selected)
         if not quote_id: messagebox.showerror("Error","❌ Could not resolve selected quote."); return
         if not messagebox.askyesno("Confirm", f"Update quote {selected}?"): return
-        push_quote(job["id"], job.get("description") or "", self.controller.filtered_items, quote_id=quote_id, job_no_for_web=job.get("jobNo"))
+        push_quote(
+            job["id"],
+            job.get("description") or "",
+            self.controller.filtered_items,
+            quote_id=quote_id,
+            job_no_for_web=job.get("jobNo"),
+            parent=self.controller,
+        )
 
 
     def _load_override_job(self):
