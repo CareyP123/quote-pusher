@@ -81,30 +81,48 @@ def center_popup(window: tk.Toplevel, parent=None):
         window.update_idletasks()
         w = window.winfo_width()
         h = window.winfo_height()
-        if w <= 1:
-            w = window.winfo_reqwidth()
-        if h <= 1:
-            h = window.winfo_reqheight()
+        if w <= 1 or h <= 1:
+            w = window.winfo_reqwidth() if w <= 1 else w
+            h = window.winfo_reqheight() if h <= 1 else h
+        if w <= 1 or h <= 1:
+            geom = window.winfo_geometry()
+            m = re.match(r"(\d+)x(\d+)", geom)
+            if m:
+                if w <= 1:
+                    w = int(m.group(1))
+                if h <= 1:
+                    h = int(m.group(2))
 
         x = y = None
         if parent is not None:
             try:
                 parent.update_idletasks()
                 if parent.winfo_viewable():
-                    pw = parent.winfo_width() or parent.winfo_reqwidth()
-                    ph = parent.winfo_height() or parent.winfo_reqheight()
+                    pw = parent.winfo_width()
+                    ph = parent.winfo_height()
+                    if pw <= 1 or ph <= 1:
+                        pw = parent.winfo_reqwidth() if pw <= 1 else pw
+                        ph = parent.winfo_reqheight() if ph <= 1 else ph
+                    if pw <= 1 or ph <= 1:
+                        p_geom = parent.winfo_geometry()
+                        pm = re.match(r"(\d+)x(\d+)", p_geom)
+                        if pm:
+                            if pw <= 1:
+                                pw = int(pm.group(1))
+                            if ph <= 1:
+                                ph = int(pm.group(2))
                     px = parent.winfo_rootx()
                     py = parent.winfo_rooty()
-                    x = px + max((pw - w) // 2, 0)
-                    y = py + max((ph - h) // 2, 0)
+                    x = px + ((pw - w) // 2)
+                    y = py + ((ph - h) // 2)
             except Exception as parent_error:
                 print(f"⚠️ Failed to derive parent geometry for centering: {parent_error}")
 
         if x is None or y is None:
             sw = window.winfo_screenwidth()
             sh = window.winfo_screenheight()
-            x = max((sw - w) // 2, 0)
-            y = max((sh - h) // 2, 0)
+            x = (sw - w) // 2
+            y = (sh - h) // 2
 
         window.geometry(f"{int(w)}x{int(h)}+{int(x)}+{int(y)}")
     except Exception as center_error:
