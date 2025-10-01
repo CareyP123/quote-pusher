@@ -269,27 +269,30 @@ def push_quote(job_id, title, items, quote_id=None, job_no_for_web=None, parent=
         popup.title("Success")
         ttk.Label(popup, text="✅ Quote submitted successfully.\nOpening Fergus…").pack(padx=20, pady=20)
         # Center and raise popup (non-blocking)
-        try:
-            popup.update_idletasks()
-            w, h = popup.winfo_reqwidth(), popup.winfo_reqheight()
-            if parent:
-                parent.update_idletasks()
-                px, py = parent.winfo_rootx(), parent.winfo_rooty()
-                pw, ph = parent.winfo_width(), parent.winfo_height()
-                if pw <= 1 or ph <= 1:
-                    pw, ph = parent.winfo_reqwidth(), parent.winfo_reqheight()
-                x = px + (pw - w)//2
-                y = py + (ph - h)//2
+        popup.update_idletasks()
+        w, h = popup.winfo_reqwidth(), popup.winfo_reqheight()
+        if parent:
+            parent.update_idletasks()
+            px, py = parent.winfo_rootx(), parent.winfo_rooty()
+            pw, ph = parent.winfo_width(), parent.winfo_height()
+            if pw <= 1 or ph <= 1:
+                pw, ph = parent.winfo_reqwidth(), parent.winfo_reqheight()
+            x = px + (pw - w)//2
+            y = py + (ph - h)//2
+            try:
                 popup.transient(parent)
-            else:
-                sw, sh = popup.winfo_screenwidth(), popup.winfo_screenheight()
-                x, y = (sw - w)//2, (sh - h)//3
-            x_prefix = "+" if x >= 0 else ""
-            y_prefix = "+" if y >= 0 else ""
-            popup.geometry(f"{x_prefix}{x}{y_prefix}{y}")
+            except Exception as transient_error:
+                print(f"⚠️ Failed to mark popup transient: {transient_error}")
+        else:
+            sw, sh = popup.winfo_screenwidth(), popup.winfo_screenheight()
+            x, y = (sw - w)//2, (sh - h)//3
+
+        popup.geometry(f"+{x}+{y}")
+
+        try:
             popup.attributes("-topmost", True)
-        except Exception as centering_error:
-            print(f"⚠️ Failed to center success popup: {centering_error}")
+        except Exception as attributes_error:
+            print(f"⚠️ Failed to set popup attributes: {attributes_error}")
 
         # Best-effort: open the job's Quotes page (works for most tenants)
         try:
