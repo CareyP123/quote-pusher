@@ -281,9 +281,24 @@ def push_quote(job_id, title, items, quote_id=None, job_no_for_web=None, parent=
             except Exception as transient_error:
                 print(f"⚠️ Failed to mark popup transient: {transient_error}")
 
-        sw, sh = popup.winfo_screenwidth(), popup.winfo_screenheight()
-        x = max((sw - w) // 2, 0)
-        y = max((sh - h) // 2, 0)
+        if parent:
+            try:
+                parent.update_idletasks()
+                px = parent.winfo_rootx()
+                py = parent.winfo_rooty()
+                pw = parent.winfo_width()
+                ph = parent.winfo_height()
+                x = max(px + (pw - w) // 2, 0)
+                y = max(py + (ph - h) // 2, 0)
+            except Exception as center_error:
+                print(f"⚠️ Failed to center popup on parent: {center_error}")
+                sw, sh = popup.winfo_screenwidth(), popup.winfo_screenheight()
+                x = max((sw - w) // 2, 0)
+                y = max((sh - h) // 2, 0)
+        else:
+            sw, sh = popup.winfo_screenwidth(), popup.winfo_screenheight()
+            x = max((sw - w) // 2, 0)
+            y = max((sh - h) // 2, 0)
 
         popup.geometry(f"{int(w)}x{int(h)}+{int(x)}+{int(y)}")
 
