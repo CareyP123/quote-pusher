@@ -74,6 +74,42 @@ def extract_digits(s):
     m = re.search(r"(\d+)", str(s))
     return m.group(1) if m else s
 
+
+def center_popup(window: tk.Toplevel, parent=None):
+    """Center a transient popup using the same approach as the confirmation dialog."""
+    try:
+        window.update_idletasks()
+        w = window.winfo_width()
+        h = window.winfo_height()
+        if w <= 1:
+            w = window.winfo_reqwidth()
+        if h <= 1:
+            h = window.winfo_reqheight()
+
+        x = y = None
+        if parent is not None:
+            try:
+                parent.update_idletasks()
+                if parent.winfo_viewable():
+                    pw = parent.winfo_width() or parent.winfo_reqwidth()
+                    ph = parent.winfo_height() or parent.winfo_reqheight()
+                    px = parent.winfo_rootx()
+                    py = parent.winfo_rooty()
+                    x = px + max((pw - w) // 2, 0)
+                    y = py + max((ph - h) // 2, 0)
+            except Exception as parent_error:
+                print(f"⚠️ Failed to derive parent geometry for centering: {parent_error}")
+
+        if x is None or y is None:
+            sw = window.winfo_screenwidth()
+            sh = window.winfo_screenheight()
+            x = max((sw - w) // 2, 0)
+            y = max((sh - h) // 2, 0)
+
+        window.geometry(f"{int(w)}x{int(h)}+{int(x)}+{int(y)}")
+    except Exception as center_error:
+        print(f"⚠️ Failed to center popup: {center_error}")
+
 print("🔍 Attempting to access root…")
 root = ps.Root(); print("✅ Got root folder")
 job = find_child_by_name(root,"Job")
@@ -269,23 +305,13 @@ def push_quote(job_id, title, items, quote_id=None, job_no_for_web=None, parent=
         popup.title("Success")
         ttk.Label(popup, text="✅ Quote submitted successfully.\nOpening Fergus…").pack(padx=20, pady=20)
         # Center and raise popup (non-blocking)
-        popup.update_idletasks()
-        w, h = popup.winfo_width(), popup.winfo_height()
-        if w <= 1:
-            w = popup.winfo_reqwidth()
-        if h <= 1:
-            h = popup.winfo_reqheight()
         if parent:
             try:
                 popup.transient(parent)
             except Exception as transient_error:
                 print(f"⚠️ Failed to mark popup transient: {transient_error}")
 
-        sw, sh = popup.winfo_screenwidth(), popup.winfo_screenheight()
-        x = max((sw - w) // 2, 0)
-        y = max((sh - h) // 2, 0)
-
-        popup.geometry(f"{int(w)}x{int(h)}+{int(x)}+{int(y)}")
+        center_popup(popup, parent)
 
         try:
             popup.attributes("-topmost", True)
